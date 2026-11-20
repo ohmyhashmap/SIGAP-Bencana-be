@@ -13,7 +13,9 @@ const MAX_INDEXED_REPORTS = 500;
 const MAX_INDEXED_NEWS = 200;
 
 function providerUrl(path) {
-	return `${config.aiBaseUrl.replace(/\/+$/, '')}/${path}`;
+	// Hapus satu trailing slash (jika ada) tanpa quantifier berulang untuk menghindari backtracking.
+	const base = config.aiBaseUrl.endsWith('/') ? config.aiBaseUrl.slice(0, -1) : config.aiBaseUrl;
+	return `${base}/${path}`;
 }
 
 async function providerRequest(path, body) {
@@ -156,8 +158,10 @@ async function retrieve(question, documents) {
 }
 
 function parseAnswer(content) {
-	const cleaned = content.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
-	const result = JSON.parse(cleaned);
+	// Hapus blok kode markdown (``` atau ```json) di awal/akhir respons AI secara terpisah
+	// untuk menghindari backtracking dari alternation dengan \s* di regex tunggal.
+	const stripped = content.trim().replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+	const result = JSON.parse(stripped);
 	if (typeof result.answer !== 'string' || !Array.isArray(result.citations)) {
 		throw new Error('Format jawaban AI tidak valid.');
 	}

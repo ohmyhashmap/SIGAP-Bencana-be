@@ -41,7 +41,7 @@ export function parseFirmsCsv(csv) {
 				detectedAt: new Date(`${cells[iDate]}T${time.slice(0, 2)}:${time.slice(2)}:00Z`)
 			};
 		})
-		.filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lon) && !isNaN(h.detectedAt));
+		.filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lon) && !Number.isNaN(h.detectedAt.getTime()));
 }
 
 export async function saveHotspots(hotspots) {

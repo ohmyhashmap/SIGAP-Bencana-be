@@ -13,9 +13,23 @@ function decode(text) {
 }
 
 function tag(xml, name) {
-	const match = xml.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`));
-	if (!match) return '';
-	return match[1].replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, '$1').trim();
+	// Gunakan indexOf agar tidak ada backtracking (menggantikan [\s\S]*? di RegExp dinamis).
+	const open = `<${name}`;
+	const close = `</${name}>`;
+	const start = xml.indexOf(open);
+	if (start === -1) return '';
+	const contentStart = xml.indexOf('>', start);
+	if (contentStart === -1) return '';
+	const end = xml.indexOf(close, contentStart + 1);
+	if (end === -1) return '';
+	let inner = xml.slice(contentStart + 1, end).trim();
+	// Lepas pembungkus CDATA jika ada: <![CDATA[...]]>
+	const cdataPrefix = '<![CDATA[';
+	const cdataSuffix = ']]>';
+	if (inner.startsWith(cdataPrefix) && inner.endsWith(cdataSuffix)) {
+		inner = inner.slice(cdataPrefix.length, inner.length - cdataSuffix.length);
+	}
+	return inner.trim();
 }
 
 const truncate = (text, max) => (text.length > max ? `${text.slice(0, max).trimEnd()}...` : text);
