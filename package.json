@@ -1,0 +1,23 @@
+{
+	"name": "sigap-bencana-backend",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"description": "REST API SIGAP Bencana (Express.js + PostgreSQL)",
+	"engines": {
+		"node": ">=20.12"
+	},
+	"scripts": {
+		"start": "node src/server.js",
+		"dev": "node --watch src/server.js",
+		"migrate": "node src/cli.js migrate",
+		"seed": "node src/cli.js seed",
+		"setup": "node src/cli.js migrate && node src/cli.js seed",
+		"test": "node --test --test-concurrency=1 \"test/**/*.test.js\""
+	},
+	"dependencies": {
+		"cors": "^2.8.6",
+		"express": "^5.3.0",
+		"pg": "^8.23.1"
+	}
+}
