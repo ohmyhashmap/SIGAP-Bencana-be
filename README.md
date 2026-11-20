@@ -14,12 +14,13 @@ Railway, atau VPS), bukan sebagai static site.
 - **Install/Build Command:** `npm ci`
 - **Start Command:** `npm start`
 - **Database:** PostgreSQL managed atau PostgreSQL pada server BE
+- **Cache:** Redis managed/server; `REDIS_URL` wajib di production
 
 Set environment variables dari `.env.example` pada dashboard host BE. Minimal
 produksi: `NODE_ENV=production`, `PORT` yang diberikan host, `DATABASE_URL`,
-`JWT_SECRET` acak yang kuat, dan `CORS_ORIGIN` sama dengan origin publik frontend
-FE (tanpa slash akhir). Isi `DATABASE_SSL=true` bila provider PostgreSQL mewajibkan
-TLS.
+`DATABASE_SSL` sesuai provider, `REDIS_URL`, `JWT_SECRET` acak yang kuat, dan
+`CORS_ORIGIN` sama dengan origin publik frontend FE (tanpa slash akhir).
+Gunakan URL `rediss://` atau TLS Redis yang disediakan provider bila diperlukan.
 
 Setelah mengisi environment dan membuat database, jalankan migrasi satu kali:
 
@@ -43,6 +44,10 @@ npm run setup                 # migrate (buat tabel) + seed (berita & akun uji)
 npm run dev                   # http://localhost:8787/api/v1
 ```
 
+Untuk memakai Redis saat development, jalankan instance Redis lokal lalu set
+`REDIS_URL=redis://localhost:6379` di `.env`. Jika `REDIS_URL` dikosongkan,
+development menggunakan cache memori proses; production tetap mewajibkan Redis.
+
 | Script            | Fungsi                                                                        |
 | ----------------- | ----------------------------------------------------------------------------- |
 | `npm start`       | Menjalankan server                                                            |
@@ -57,12 +62,20 @@ npm run dev                   # http://localhost:8787/api/v1
 Lihat `.env.example`. Yang terpenting:
 
 - `DATABASE_URL`: connection string PostgreSQL. Isi `DATABASE_SSL=true` untuk layanan terkelola yang mewajibkan SSL.
+- `REDIS_URL`: URL Redis, contoh `redis://localhost:6379` atau URL TLS dari layanan terkelola. Wajib untuk `NODE_ENV=production`; pada development boleh kosong dan cache memakai memori proses.
+- `REDIS_CACHE_PREFIX` (opsional): prefix namespace key cache; default `sigap:cache:`.
 - `JWT_SECRET`: wajib di produksi (`NODE_ENV=production`); server menolak start tanpa nilai ini.
 - `CORS_ORIGIN`: origin frontend FE, misalnya `https://<DOMAIN_FE>` tanpa slash akhir.
 - `FIRMS_MAP_KEY` (opsional): tanpa key ini tabel `hotspots` tidak disinkronkan, sehingga peta titik panas kosong.
 - `WAQI_TOKEN` (opsional): stasiun AQI WAQI. Tanpa token, kualitas udara memakai model Open-Meteo.
 - `AI_BASE_URL`, `AI_API_KEY`, `AI_CHAT_MODEL`, `AI_EMBEDDING_MODEL` (opsional): endpoint API yang kompatibel dengan format OpenAI untuk fitur RAG.
 - `PAYMENT_INSTRUCTIONS` (opsional): instruksi pembayaran top-up AI yang ditampilkan pada halaman Asisten AI.
+
+Redis dipakai untuk berbagi cache respons layanan eksternal (cuaca, AQI, safe-window,
+angin, dan RSS berita) lintas instance backend. TTL mengikuti tiap pemanggil cache.
+Cache memori lokal tetap menjadi L1; saat Redis mengalami gangguan, error dicatat dan
+request mengambil data baru dari sumbernya, sehingga Redis bukan message broker atau
+penyimpanan permanen.
 
 Setelah akun admin dibuat dan migrasi dijalankan, beri role admin langsung dari PostgreSQL:
 
