@@ -80,13 +80,26 @@ export async function syncHotspots() {
 	if (rowCount === 0) return;
 
 	try {
-		const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${config.firmsMapKey}/${config.firmsSource}/${INDONESIA_BBOX.join(',')}/${SYNC_DAYS}`;
-		const inserted = await saveHotspots(parseFirmsCsv(await fetchText(url, 30_000)));
+		const sources = Array.from(new Set([config.firmsSource, 'VIIRS_NOAA20_NRT', 'MODIS_NRT'])).filter(Boolean);
+		let totalInserted = 0;
+		for (const source of sources) {
+			try {
+				const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${config.firmsMapKey}/${source}/${INDONESIA_BBOX.join(',')}/${SYNC_DAYS}`;
+				const text = await fetchText(url, 30_000);
+				const hotspots = parseFirmsCsv(text);
+				if (hotspots.length > 0) {
+					totalInserted += await saveHotspots(hotspots);
+					break;
+				}
+			} catch (e) {
+				console.warn(`Sinkronisasi FIRMS sumber ${source} gagal:`, e.message);
+			}
+		}
 		await query(
 			`DELETE FROM hotspots WHERE detected_at < now() - make_interval(days => $1)`,
 			[RETENTION_DAYS]
 		);
-		console.log(`Sinkronisasi FIRMS: ${inserted} titik panas baru.`);
+		console.log(`Sinkronisasi FIRMS: ${totalInserted} titik panas baru.`);
 	} catch (error) {
 		// Coba lagi lebih cepat dari jadwal normal bila sinkronisasi gagal.
 		await query(

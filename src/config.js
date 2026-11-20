@@ -48,7 +48,7 @@ export const config = {
 	jwtTtlSeconds: 7 * 24 * 60 * 60,
 	corsOrigin: process.env.CORS_ORIGIN || '*',
 	firmsMapKey: process.env.FIRMS_MAP_KEY || '',
-	firmsSource: process.env.FIRMS_SOURCE || 'VIIRS_SNPP_NRT',
+	firmsSource: process.env.FIRMS_SOURCE || 'VIIRS_NOAA20_NRT',
 	hotspotSyncMinutes: Number(process.env.HOTSPOT_SYNC_MINUTES) || 60,
 	waqiToken: process.env.WAQI_TOKEN || '',
 	newsRssUrl:
