@@ -4,11 +4,6 @@
 import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, it } from 'node:test';
 
-try {
-	process.loadEnvFile?.();
-} catch {
-	// .env bersifat opsional.
-}
 const TEST_DB = process.env.TEST_DATABASE_URL;
 if (TEST_DB) process.env.DATABASE_URL = TEST_DB;
 process.env.FIRMS_MAP_KEY = '';
@@ -61,10 +56,14 @@ describe('SIGAP Bencana API', { skip: !TEST_DB && 'TEST_DATABASE_URL belum di-se
 		const headers = {};
 		if (body !== undefined) headers['Content-Type'] = 'application/json';
 		if (token) headers.Authorization = `Bearer ${token}`;
+		let requestBody;
+		if (body !== undefined) {
+			requestBody = typeof body === 'string' ? body : JSON.stringify(body);
+		}
 		const res = await realFetch(`${baseUrl}${path}`, {
 			method,
 			headers,
-			body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body)
+			body: requestBody
 		});
 		return { status: res.status, body: await res.json() };
 	}
@@ -393,7 +392,11 @@ describe('SIGAP Bencana API', { skip: !TEST_DB && 'TEST_DATABASE_URL belum di-se
 			// Paling rendah pukul 02.00 (malam, diabaikan), lalu 13.00-14.00 berikutnya.
 			const night = firstAt('02');
 			const noon = firstAt('13');
-			const pm2_5 = time.map((_, i) => (i === night ? 1 : i === noon || i === noon + 1 ? 5 : 40));
+			const pm2_5 = time.map((_, i) => {
+				if (i === night) return 1;
+				if (i === noon || i === noon + 1) return 5;
+				return 40;
+			});
 			upstream = () => json({ hourly: { time, pm2_5 } });
 
 			const res = await api('GET', '/api/v1/safe-window?lat=3.59&lon=98.67');
