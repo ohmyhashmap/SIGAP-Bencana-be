@@ -58,6 +58,15 @@ export function createApp() {
 	api.use(hotspotsRouter);
 	app.use('/api/v1', api);
 
+	app.get('/', (_req, res) => {
+		ok(res, {
+			name: 'SIGAP Bencana API',
+			version: 'v1',
+			status: 'running',
+			endpoints: ENDPOINTS
+		});
+	});
+
 	app.get('/health', async (_req, res) => {
 		await query('SELECT 1');
 		ok(res, { status: 'ok', database: 'postgresql' });
