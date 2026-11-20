@@ -80,20 +80,24 @@ export async function syncHotspots() {
 	if (rowCount === 0) return;
 
 	try {
-		const sources = Array.from(new Set([config.firmsSource, 'VIIRS_NOAA20_NRT', 'MODIS_NRT'])).filter(Boolean);
+		const primarySource = config.firmsSource || 'VIIRS_NOAA20_NRT';
 		let totalInserted = 0;
-		for (const source of sources) {
-			try {
-				const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${config.firmsMapKey}/${source}/${INDONESIA_BBOX.join(',')}/${SYNC_DAYS}`;
-				const text = await fetchText(url, 30_000);
-				const hotspots = parseFirmsCsv(text);
-				if (hotspots.length > 0) {
-					totalInserted += await saveHotspots(hotspots);
-					break;
+		try {
+			const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${config.firmsMapKey}/${primarySource}/${INDONESIA_BBOX.join(',')}/${SYNC_DAYS}`;
+			const text = await fetchText(url, 30_000);
+			const hotspots = parseFirmsCsv(text);
+			if (hotspots.length > 0) {
+				totalInserted = await saveHotspots(hotspots);
+			} else {
+				const fallbackUrl = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${config.firmsMapKey}/VIIRS_NOAA20_NRT/${INDONESIA_BBOX.join(',')}/${SYNC_DAYS}`;
+				const fallbackText = await fetchText(fallbackUrl, 30_000);
+				const fallbackHotspots = parseFirmsCsv(fallbackText);
+				if (fallbackHotspots.length > 0) {
+					totalInserted = await saveHotspots(fallbackHotspots);
 				}
-			} catch (e) {
-				console.warn(`Sinkronisasi FIRMS sumber ${source} gagal:`, e.message);
 			}
+		} catch (e) {
+			console.warn('Sinkronisasi FIRMS gagal:', e.message);
 		}
 		await query(
 			`DELETE FROM hotspots WHERE detected_at < now() - make_interval(days => $1)`,

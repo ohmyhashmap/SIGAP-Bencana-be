@@ -24,7 +24,7 @@ function resolveDatabaseUrl() {
 		const port = process.env.DB_PORT ? `:${process.env.DB_PORT}` : '';
 		return `postgres://${auth}${process.env.DB_HOST}${port}/${process.env.DB_DATABASE}`;
 	}
-	return 'postgres://postgres:postgres@localhost:5432/sigap_bencana';
+	return 'postgres://localhost:5432/sigap_bencana';
 }
 
 function resolveRedisUrl() {
