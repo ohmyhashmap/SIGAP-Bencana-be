@@ -108,12 +108,7 @@ pipeline {
                     sh '''
                         set -eu
 
-                        sonar-scanner \
-                            -Dsonar.projectKey=sigap-bencana-backend \
-                            -Dsonar.sources=src \
-                            -Dsonar.tests=test \
-                            -Dsonar.test.inclusions="test/**/*.test.js" \
-                            -Dsonar.javascript.node.maxspace=2048
+                        sonar-scanner
                     '''
                 }
             }
