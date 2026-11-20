@@ -22,7 +22,11 @@ try {
 	console.error('Koneksi Redis gagal, beralih ke cache memori lokal:', error.message);
 }
 
-syncHotspots().catch((err) => console.warn('Sinkronisasi awal FIRMS dilewati:', err.message));
+try {
+	await syncHotspots();
+} catch (err) {
+	console.warn('Sinkronisasi awal FIRMS dilewati:', err.message);
+}
 
 const server = createApp().listen(config.port, () => {
 	console.log(

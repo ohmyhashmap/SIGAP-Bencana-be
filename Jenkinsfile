@@ -1,6 +1,10 @@
 ﻿pipeline {
     agent any
 
+    environment {
+        NODE_IMAGE = 'node:22-alpine'
+    }
+
     options {
         timestamps()
         skipDefaultCheckout(true)
@@ -12,7 +16,7 @@
         stage('Checkout') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image "${NODE_IMAGE}"
                     reuseNode true
                 }
             }
@@ -24,7 +28,7 @@
         stage('Install Dependencies') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image "${NODE_IMAGE}"
                     reuseNode true
                 }
             }
@@ -36,7 +40,7 @@
         stage('Test') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image "${NODE_IMAGE}"
                     reuseNode true
                 }
             }
@@ -135,7 +139,7 @@
         stage('Package Backend') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image "${NODE_IMAGE}"
                     reuseNode true
                     args '-u root'
                 }

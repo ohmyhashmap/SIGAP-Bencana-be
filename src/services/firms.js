@@ -97,7 +97,9 @@ export async function syncHotspots() {
 				}
 			}
 		} catch (e) {
-			console.warn('Sinkronisasi FIRMS gagal:', e.message);
+			// Sanitasi pesan error sebelum di-log untuk mencegah log injection.
+			const safeMsg = String(e.message).replace(/[\r\n\t]/g, ' ').slice(0, 200);
+			console.warn('Sinkronisasi FIRMS gagal:', safeMsg);
 		}
 		await query(
 			`DELETE FROM hotspots WHERE detected_at < now() - make_interval(days => $1)`,
