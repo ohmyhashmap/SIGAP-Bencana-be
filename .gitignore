@@ -5,3 +5,4 @@ node_modules
 latest-backend.zip
 trivy-results.sarif
 .trivy-cache
+coverage/

@@ -1,4 +1,4 @@
-pipeline {
+﻿pipeline {
     agent any
 
     options {
@@ -44,11 +44,21 @@ pipeline {
                 sh '''
                     set -eu
 
+                    mkdir -p coverage
+
                     if [ -z "${TEST_DATABASE_URL:-}" ]; then
                         echo "TEST_DATABASE_URL is not set; database integration tests will be skipped."
                     fi
 
-                    npm test
+                    node --test --experimental-test-coverage \
+                        --test-reporter=spec \
+                        --test-reporter-destination=stdout \
+                        --test-reporter=lcov \
+                        --test-reporter-destination=coverage/lcov.info \
+                        "test/cache.test.js" \
+                        "test/firms.test.js" \
+                        "test/config.test.js" \
+                        "test/root.test.js"
                 '''
             }
         }
