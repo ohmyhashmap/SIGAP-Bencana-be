@@ -11,13 +11,38 @@ if (isProduction && !process.env.JWT_SECRET) {
 	throw new Error('JWT_SECRET wajib di-set saat NODE_ENV=production.');
 }
 
+function resolveDatabaseUrl() {
+	if (process.env.DATABASE_URL) {
+		return process.env.DATABASE_URL;
+	}
+	if (process.env.DB_HOST && process.env.DB_DATABASE) {
+		const user = encodeURIComponent(process.env.DB_USERNAME || '');
+		const rawPassword = process.env.DB_PASSWORD || '';
+		const cleanPassword = rawPassword.replace(/^["']|["']$/g, '');
+		const pass = cleanPassword ? `:${encodeURIComponent(cleanPassword)}` : '';
+		const auth = user ? `${user}${pass}@` : '';
+		const port = process.env.DB_PORT ? `:${process.env.DB_PORT}` : '';
+		return `postgres://${auth}${process.env.DB_HOST}${port}/${process.env.DB_DATABASE}`;
+	}
+	return 'postgres://postgres:postgres@localhost:5432/sigap_bencana';
+}
+
+function resolveRedisUrl() {
+	if (process.env.REDIS_URL) {
+		return process.env.REDIS_URL;
+	}
+	if (process.env.REDIS_HOST) {
+		const port = process.env.REDIS_PORT || '6379';
+		return `redis://${process.env.REDIS_HOST}:${port}`;
+	}
+	return '';
+}
+
 export const config = {
-	port: Number(process.env.PORT) || 8787,
-	databaseUrl:
-		process.env.DATABASE_URL ||
-		'postgres://postgres:postgres@localhost:5432/sigap_bencana',
+	port: Number(process.env.PORT) || Number(process.env.APP_PORT) || 8787,
+	databaseUrl: resolveDatabaseUrl(),
 	databaseSsl: process.env.DATABASE_SSL === 'true',
-	redisUrl: process.env.REDIS_URL || '',
+	redisUrl: resolveRedisUrl(),
 	redisCachePrefix: process.env.REDIS_CACHE_PREFIX || 'sigap:cache:',
 	jwtSecret: process.env.JWT_SECRET || 'dev-only-secret-ganti-di-produksi',
 	jwtTtlSeconds: 7 * 24 * 60 * 60,

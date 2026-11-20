@@ -210,7 +210,14 @@ pipeline {
                         curl -sS --fail-with-body \
                             -X POST "$URL_REDEPLOY" \
                             -H "Content-Type: application/json" \
-                            -d "{\"token_access\":\"$DEPLOY_TOKEN\",\"website_id\":\"$WEBSITE_ID\",\"source_url\":\"$ARTIFACT_URL\",\"source_type\":\"jenkins\"}"
+                            --data @- <<EOF
+{
+  "token_access": "$DEPLOY_TOKEN",
+  "website_id": "$WEBSITE_ID",
+  "source_url": "$ARTIFACT_URL",
+  "source_type": "jenkins"
+}
+EOF
                     '''
 
                     def status = 'IN_PROGRESS'
@@ -223,7 +230,12 @@ pipeline {
                                 curl -sS --fail-with-body \
                                     -X POST "$URL_PROGRESS" \
                                     -H "Content-Type: application/json" \
-                                    -d "{\"token_access\":\"$DEPLOY_TOKEN\",\"website_id\":\"$WEBSITE_ID\"}"
+                                    --data @- <<EOF
+{
+  "token_access": "$DEPLOY_TOKEN",
+  "website_id": "$WEBSITE_ID"
+}
+EOF
                             ''',
                             returnStdout: true
                         ).trim()

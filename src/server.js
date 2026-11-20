@@ -1,9 +1,21 @@
 import { createApp } from './app.js';
 import { config } from './config.js';
+import { migrate } from './db/migrate.js';
 import { pool } from './db/pool.js';
 import { connectRedis, disconnectRedis } from './lib/redis.js';
 
-await connectRedis();
+try {
+	await migrate();
+	console.log('Migrasi skema database selesai.');
+} catch (error) {
+	console.error('Migrasi skema database gagal atau dilewati:', error.message);
+}
+
+try {
+	await connectRedis();
+} catch (error) {
+	console.error('Koneksi Redis gagal, beralih ke cache memori lokal:', error.message);
+}
 
 const server = createApp().listen(config.port, () => {
 	console.log(
