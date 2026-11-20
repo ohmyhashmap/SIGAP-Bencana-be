@@ -2,3 +2,6 @@ node_modules
 .env
 .env.*
 !.env.example
+latest-backend.zip
+trivy-results.sarif
+.trivy-cache

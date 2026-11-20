@@ -32,6 +32,26 @@ Opsional, jalankan `npm run seed` untuk mengisi berita awal dan akun seed. Atur
 `SEED_USERNAME` serta `SEED_PASSWORD` yang kuat terlebih dahulu; jangan gunakan
 kredensial contoh/default untuk produksi. Health check: `/health`.
 
+## Jenkins CI/CD
+
+`Jenkinsfile` di root repository ini hanya memproses backend: `npm ci`, `npm test`,
+Trivy, analisis SonarQube dan quality gate, membuat serta mengarsipkan ZIP BE, lalu
+memicu deployment backend. Buat job Jenkins dari repository BE ini; repository FE
+tidak menyimpan Jenkinsfile.
+
+Konfigurasikan agent/plugin Docker pipeline, Warnings NG, SonarQube, dan Pipeline
+Utility Steps (`readJSON`). SonarQube scanner harus dapat menjangkau server melalui
+jaringan Docker `cicd-network`. Deployment memakai integrasi platform yang sama
+dengan pipeline sebelumnya, dengan `WEBSITE_ID` khusus BE, dan membutuhkan variabel
+`URL_REDEPLOY`, `URL_PROGRESS`, `WEBSITE_ID`, `DEPLOY_TOKEN`, serta URL `BUILD_URL`
+yang dapat dijangkau container.
+
+Simpan `DEPLOY_TOKEN` sebagai credential rahasia Jenkins dan bind ke environment
+sebagai `DEPLOY_TOKEN`; jangan menyimpan token di repository. `TEST_DATABASE_URL`
+opsional, tetapi diperlukan agar suite integrasi API tidak dilewati. Platform tujuan
+harus memasang dependency (`npm ci`), memberi environment produksi BE termasuk
+PostgreSQL dan `REDIS_URL`, lalu menjalankan `npm start`.
+
 ## Persiapan
 
 Kebutuhan: Node.js ≥ 20.12 dan PostgreSQL ≥ 13.
